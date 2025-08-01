@@ -23,12 +23,12 @@ esphome:
     version: 1.1.3
 
 external_components:
-  # - source:
-  #     type: git
-  #     url: https://github.com/svenar-iot/esphome-comfoair
-  #   components: [comfoair_q]
-  - source: components
+  - source:
+      type: git
+      url: https://github.com/svenar-iot/esphome-comfoair
     components: [comfoair_q]
+  # - source: components
+  #   components: [comfoair_q]
 
 dashboard_import:
   package_import_url: github://svenar-iot/esphome-comfoair/comfoair_q.yaml@v1.1.3
