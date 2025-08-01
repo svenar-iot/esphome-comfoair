@@ -39,6 +39,12 @@ __Using:__ `comfoair_ca.yaml`
 - Zehnder ComfoD 450
 - Zehnder ComfoD 550
 
+## ComfoAir Q Series
+__Using:__ `comfoair_q.yaml`
+- Zehnder ComfoAir Q350
+- Zehnder ComfoAir Q450
+- Zehnder ComfoAir Q600
+
 ---
 
 ![Hardware](images/hardware.png)
