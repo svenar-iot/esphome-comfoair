@@ -1,6 +1,6 @@
 ![ComfoAir Controller Banner](images/banner.png)
 
-[![GPLv3 License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Get Hardware](https://img.shields.io/badge/Shop-Get_Plug--Play_Solution-8A2BE2)](https://shop.svenar.nl)
+[![GPLv3 License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Get Hardware](https://img.shields.io/badge/Shop-Get_Plug--'n--Play_Solution-8A2BE2)](https://shop.svenar.nl)
 
 ESPHome-powered controller for Zehnder WHR / CA ventilation units that integrate seamlessly with Home Assistant.
 
@@ -18,6 +18,7 @@ ESPHome-powered controller for Zehnder WHR / CA ventilation units that integrate
   - ⏲️ Operation hour tracking
   - 🏠 Home Assistant climate entity support
   - 🔄 Automatic firmware updates (Using ESPHome-builder)
+  - ... and more
 
 ---
 
@@ -51,7 +52,9 @@ __Using:__ `comfoair_q.yaml`
 
 Recommended hardware:
 * ESP32 board
-* MAX3232 board
+  * MAX3232 board for ComfoAir and ComfoD devices
+  * SN65HVD230 board for ComfoAir Q devices
+* 12V -> 3.3V converter (to power the ESP32 from the ComfoAir devices)
 
 For plug-and-play solutions, visit [shop.svenar.nl](https://shop.svenar.nl)
 
@@ -63,24 +66,33 @@ For plug-and-play solutions, visit [shop.svenar.nl](https://shop.svenar.nl)
 
 https://esphome.io/guides/cli.html
 
+### ComfoAir
+
 ```sh
-$ esphome build comfoair.yaml
-$ esphome upload comfoair.yaml
+$ esphome build comfoair_ca.yaml
+$ esphome upload comfoair_ca.yaml
+```
+
+### ComfoAir Q
+
+```sh
+$ esphome build comfoair_q.yaml
+$ esphome upload comfoair_q.yaml
 ```
 
 ## Using ESPHome-builder
 
 https://esphome.io/guides/getting_started_hassio.html
 
-1. Install the ESPHome-builder addin inside Home Assistant
-2. Add the `comfoair.yaml` config
+1. Install the __ESPHome-builder__ add-on inside Home Assistant
+2. Add the `comfoair_ca.yaml` or `comfoair_q.yaml` config
 3. Build and upload
 
 ---
 
 ![Credits](images/credits.png)
 
-This project builds upon the foundational work by [Wichers](https://github.com/wichers/esphome-comfoair).  
+This project builds upon the foundational work by [Wichers](https://github.com/wichers/esphome-comfoair) and [yoziru](https://github.com/yoziru/esphome-zehnder-comfoair).
 
 ---
 
