@@ -1,4 +1,4 @@
-""" Creates module ComfoAir """
+""" Creates module ComfoAir CA """
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
@@ -10,13 +10,13 @@ from esphome.const import (CONF_ID, CONF_UART_ID, DEVICE_CLASS_CURRENT,
                            UNIT_CUBIC_METER, UNIT_HOUR, UNIT_MINUTE,
                            UNIT_PERCENT, UNIT_REVOLUTIONS_PER_MINUTE)
 
-comfoair_ns = cg.esphome_ns.namespace("comfoair")
+comfoair_ns = cg.esphome_ns.namespace("comfoair_ca")
 ComfoAirComponent = comfoair_ns.class_("ComfoAirComponent", cg.Component)
 
 DEPENDENCIES = ["uart"]
 AUTO_LOAD = ["sensor", "climate", "binary_sensor", "text_sensor"]
 REQUIRED_KEY_NAME = "name"
-CONF_HUB_ID = "comfoair"
+CONF_HUB_ID = "comfoair_ca"
 
 UNIT_WEEK = "weeks"
 

@@ -10,9 +10,9 @@
 #include "registers.h"
 
 namespace esphome {
-namespace comfoair {
+namespace comfoair_ca {
 
-static const char *TAG = "comfoair";
+static const char *TAG = "comfoair_ca";
 
 class ComfoAirComponent : public climate::Climate, public PollingComponent, public uart::UARTDevice {
 public:
@@ -1165,5 +1165,5 @@ public:
   uint8_t get_exhaust_high_level() const { return exhaust_high_; }
 };
 
-}  // namespace comfoair
+}  // namespace comfoair_ca
 }  // namespace esphome
