@@ -26,11 +26,15 @@ ESPHome-powered controller for Zehnder WHR / CA ventilation units that integrate
 
 ## ComfoAir Series
 __Using:__ `comfoair_ca.yaml`
-- Zehnder WHR 930 (aka ComfoAir 350 / CA350)
-- Zehnder WHR 950 (aka ComfoAir 550 / CA550)
+- Zehnder WHR 920
+- Zehnder WHR 930
+- Zehnder WHR 950
+- Zehnder WHR 960
 - Zehnder ComfoAir 160
 - Zehnder ComfoAir 200
+- Zehnder ComfoAir 350
 - Zehnder ComfoAir 500
+- Zehnder ComfoAir 550
 
 ## ComfoD Series
 __Using:__ `comfoair_ca.yaml`
