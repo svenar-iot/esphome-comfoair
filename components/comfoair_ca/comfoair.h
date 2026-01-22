@@ -227,6 +227,11 @@ namespace esphome
       }
 
       void set_name(const char *value) { name = value; }
+      void set_name(const char *value, uint32_t name_hash)
+      {
+        (void)name_hash;
+        name = value;
+      }
       void set_uart_component(uart::UARTComponent *parent) { set_uart_parent(parent); }
 
     protected:
