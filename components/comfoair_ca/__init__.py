@@ -11,7 +11,7 @@ from esphome.const import (CONF_ID, CONF_UART_ID, DEVICE_CLASS_CURRENT,
                            UNIT_PERCENT, UNIT_REVOLUTIONS_PER_MINUTE)
 
 comfoair_ns = cg.esphome_ns.namespace("comfoair_ca")
-ComfoAirComponent = comfoair_ns.class_("ComfoAirComponent", cg.Component, uart.UARTDevice)
+ComfoAirComponent = comfoair_ns.class_("ComfoAirComponent", cg.Component, uart.UARTDevice) # pylint: disable=invalid-name
 
 DEPENDENCIES = ["uart"]
 AUTO_LOAD = ["sensor", "climate", "binary_sensor", "text_sensor"]

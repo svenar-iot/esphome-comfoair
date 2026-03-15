@@ -8,7 +8,7 @@ from esphome.components.canbus import CONF_CANBUS_ID, CanbusComponent, CanSpeed
 DEPENDENCIES = ["canbus"]
 
 zehnder_comfoair_q_ns = cg.esphome_ns.namespace("comfoair_q")
-ZehnderComfoAirQ = zehnder_comfoair_q_ns.class_("ComfoAirQ", cg.Component)
+ZehnderComfoAirQ = zehnder_comfoair_q_ns.class_("ComfoAirQ", cg.Component) # pylint: disable=invalid-name
 
 # Custom options for the ComfoAir Q component
 CONF_REQUEST_INTERVAL = "request_interval"
