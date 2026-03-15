@@ -41,7 +41,7 @@ external_components:
   #   components: [comfoair_ca]
 
 dashboard_import:
-  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml@v1.1.4
+  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml@v1.1.5
   import_full_config: false # or true
 
 wifi:
