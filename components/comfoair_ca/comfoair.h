@@ -235,6 +235,21 @@ namespace esphome
       void set_uart_component(uart::UARTComponent *parent) { set_uart_parent(parent); }
 
     protected:
+      std::string filter_ascii_(const char *input)
+      {
+        std::string out;
+
+        for (size_t i = 0; input[i] != '\0'; i++)
+        {
+          char c = input[i];
+
+          if (c >= 32 && c <= 126) // printable ASCII
+            out += c;
+        }
+
+        return out;
+      }
+
       void set_level_(int level)
       {
         if (level < 0 || level > 5)
@@ -425,19 +440,19 @@ namespace esphome
         case RES_GET_BOOTLOADER_VERSION:
           memcpy(bootloader_version_, msg, data_[COMMAND_IDX_DATA]);
           snprintf(buf, sizeof(buf), "%.10s v%0d.%02d b%2d", bootloader_version_ + 3, *bootloader_version_, *(bootloader_version_ + 1), *(bootloader_version_ + 2));
-          bootloader_info->publish_state(buf);
+          bootloader_info->publish_state(filter_ascii_(buf).c_str());
           break;
 
         case RES_GET_FIRMWARE_VERSION:
           memcpy(firmware_version_, msg, data_[COMMAND_IDX_DATA]);
           snprintf(buf, sizeof(buf), "%.10s v%0d.%02d b%2d", firmware_version_ + 3, *firmware_version_, *(firmware_version_ + 1), *(firmware_version_ + 2));
-          firmware_info->publish_state(buf);
+          firmware_info->publish_state(filter_ascii_(buf).c_str());
           break;
 
         case RES_GET_CONNECTOR_BOARD_VERSION:
           memcpy(connector_board_version_, msg, data_[COMMAND_IDX_DATA]);
           snprintf(buf, sizeof(buf), "%.10s v%0d.%02d", connector_board_version_ + 2, *connector_board_version_, *(connector_board_version_ + 1));
-          connector_board_info->publish_state(buf);
+          connector_board_info->publish_state(filter_ascii_(buf).c_str());
           break;
 
         case RES_GET_FAN_STATUS:
