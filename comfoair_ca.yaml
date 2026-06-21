@@ -28,9 +28,10 @@ esphome:
   name: ${node_name}
   comment: ${device_name}
   friendly_name: "${device_name}"
+  name_add_mac_suffix: true
   project:
     name: "${developer}.${description}"
-    version: 1.1.5
+    version: 1.1.6
 
 external_components:
   - source:
@@ -41,7 +42,7 @@ external_components:
   #   components: [comfoair_ca]
 
 dashboard_import:
-  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml@v1.1.5
+  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml@v1.1.6
   import_full_config: false # or true
 
 wifi:
