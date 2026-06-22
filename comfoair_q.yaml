@@ -21,7 +21,7 @@ esphome:
   name_add_mac_suffix: true
   project:
     name: "${developer}.${description}"
-    version: 1.1.6
+    version: 1.1.7
 
 external_components:
   - source:
@@ -32,7 +32,7 @@ external_components:
 #    components: [comfoair_q]
 
 dashboard_import:
-  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_q.yaml@v1.1.6
+  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_q.yaml@v1.1.7
   import_full_config: false
 
 wifi:
@@ -758,6 +758,14 @@ text_sensor:
           - 2 -> Overruling
 
 binary_sensor:
+  - platform: gpio
+    pin: GPIO4
+    id: factory_reset_button
+    name: "Factory Reset Button"
+    on_press:
+      then:
+        - switch.turn_on: restart_with_factory_default_settings
+
   - platform: template
     id: away_indicator # PDO 16 (raw)
     name: "Away Indicator"
@@ -840,7 +848,9 @@ button:
 
 switch:
   - platform: factory_reset
+    id: restart_with_factory_default_settings
     name: Restart with Factory Default Settings
+    icon: mdi:restart-alert
 
   - platform: template
     name: "Auto Ventilation"

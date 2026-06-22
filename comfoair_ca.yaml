@@ -31,7 +31,7 @@ esphome:
   name_add_mac_suffix: true
   project:
     name: "${developer}.${description}"
-    version: 1.1.6
+    version: 1.1.7
 
 external_components:
   - source:
@@ -42,8 +42,8 @@ external_components:
   #   components: [comfoair_ca]
 
 dashboard_import:
-  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml@v1.1.6
-  import_full_config: false # or true
+  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml@v1.1.7
+  import_full_config: false
 
 wifi:
   ap:
@@ -114,6 +114,13 @@ sensor:
     update_interval: 60s
 
 binary_sensor:
+  - platform: gpio
+    pin: GPIO4
+    id: factory_reset_button
+    name: "Factory Reset Button"
+    on_press:
+      then:
+        - switch.turn_on: restart_with_factory_default_settings
 
 text_sensor:
   - platform: version
@@ -287,9 +294,37 @@ comfoair_ca:
   extractor_hood_switch_off_delay_minutes:
     name: "Extractor hood switch off delay minutes"
 
+button:
+  - platform: template
+    id: fan_low
+    name: "Fan Low"
+    on_press:
+      - lambda: |-
+          auto call = id(comfoair_climate).make_call();
+          call.set_fan_mode(climate::CLIMATE_FAN_LOW);
+          call.perform();
+  - platform: template
+    id: fan_medium
+    name: "Fan Medium"
+    on_press:
+      - lambda: |-
+          auto call = id(comfoair_climate).make_call();
+          call.set_fan_mode(climate::CLIMATE_FAN_MEDIUM);
+          call.perform();
+  - platform: template
+    id: fan_high
+    name: "Fan High"
+    on_press:
+      - lambda: |-
+          auto call = id(comfoair_climate).make_call();
+          call.set_fan_mode(climate::CLIMATE_FAN_HIGH);
+          call.perform();
+
 switch:
   - platform: factory_reset
+    id: restart_with_factory_default_settings
     name: Restart with Factory Default Settings
+    icon: mdi:restart-alert
   - platform: template
     name: "Supply Shutoff"
     id: supply_shutoff
