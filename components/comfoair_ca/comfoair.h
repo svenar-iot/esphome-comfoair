@@ -269,11 +269,11 @@ namespace esphome
       {
         if (temperature < 12.0f || temperature > 29.0f)
         {
-          ESP_LOGI(TAG, "Ignoring invalid temperature request: %i", temperature);
+          ESP_LOGI(TAG, "Ignoring invalid temperature request: %i", (int)temperature);
           return;
         }
 
-        ESP_LOGI(TAG, "Setting temperature to: %i", temperature);
+        ESP_LOGI(TAG, "Setting temperature to: %i", (int)temperature);
         {
           uint8_t command[1] = {(uint8_t)((temperature + 20.0f) * 2.0f)};
           write_command_(CMD_SET_COMFORT_TEMPERATURE, command, sizeof(command));
@@ -294,7 +294,7 @@ namespace esphome
             unused_byte_};
         // Debug write to check if the values are correct
         ESP_LOGD(TAG, "-----------------------------------");
-        ESP_LOGD(TAG, "SET VENTILATION LEVEL %:");
+        ESP_LOGD(TAG, "SET VENTILATION LEVEL %%:");
         ESP_LOGD(TAG, "- Supply Absent: %02x\t(%d%%)", supply_absent_, supply_absent_);
         ESP_LOGD(TAG, "- Exhaust Absent: %02x\t(%d%%)", exhaust_absent_, exhaust_absent_);
         ESP_LOGD(TAG, "- Supply Low: %02x\t(%d%%)", supply_low_, supply_low_);
@@ -588,7 +588,7 @@ namespace esphome
           can_send_ventilation_levels_ = true;
 
           ESP_LOGD(TAG, "-----------------------------------");
-          ESP_LOGD(TAG, "READ VENTILATION LEVEL %:");
+          ESP_LOGD(TAG, "READ VENTILATION LEVEL %%:");
           ESP_LOGD(TAG, "- Supply Absent: %02x\t(%d%%)", supply_absent_, supply_absent_);
           ESP_LOGD(TAG, "- Exhaust Absent: %02x\t(%d%%)", exhaust_absent_, exhaust_absent_);
           ESP_LOGD(TAG, "- Supply Low: %02x\t(%d%%)", supply_low_, supply_low_);
