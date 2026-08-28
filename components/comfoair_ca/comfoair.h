@@ -1,7 +1,6 @@
 #pragma once
 
 #include "esphome/core/component.h"
-#include "esphome/core/log.h"
 #include "esphome/core/optional.h"
 
 #include "esphome/components/uart/uart.h"
@@ -12,6 +11,7 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 
+#include "logger.h"
 #include "registers.h"
 
 namespace esphome
@@ -109,22 +109,22 @@ namespace esphome
       void dump_config() override
       {
         uint8_t *p;
-        ESP_LOGCONFIG(TAG, "ComfoAir:");
+        LOG_CONFIG(TAG, "ComfoAir:");
         // LOG_UPDATE_INTERVAL(this);
         p = bootloader_version_;
-        ESP_LOGCONFIG(TAG, "  Bootloader %.10s v%0d.%02d b%2d", p + 3, *p, *(p + 1), *(p + 2));
+        LOG_CONFIG(TAG, "  Bootloader %.10s v%0d.%02d b%2d", p + 3, *p, *(p + 1), *(p + 2));
         p = firmware_version_;
-        ESP_LOGCONFIG(TAG, "  Firmware %.10s v%0d.%02d b%2d", p + 3, *p, *(p + 1), *(p + 2));
+        LOG_CONFIG(TAG, "  Firmware %.10s v%0d.%02d b%2d", p + 3, *p, *(p + 1), *(p + 2));
         p = connector_board_version_;
-        ESP_LOGCONFIG(TAG, "  Connector Board %.10s v%0d.%02d", p + 2, *p, *(p + 1));
+        LOG_CONFIG(TAG, "  Connector Board %.10s v%0d.%02d", p + 2, *p, *(p + 1));
 
         if (*(p + 12) != 0)
         {
-          ESP_LOGCONFIG(TAG, "  CC-Ease v%0d.%02d", *(p + 12) >> 4, *(p + 12) & 0x0f);
+          LOG_CONFIG(TAG, "  CC-Ease v%0d.%02d", *(p + 12) >> 4, *(p + 12) & 0x0f);
         }
         if (*(p + 13) != 0)
         {
-          ESP_LOGCONFIG(TAG, "  CC-Luxe v%0d.%02d", *(p + 13) >> 4, *(p + 13) & 0x0f);
+          LOG_CONFIG(TAG, "  CC-Luxe v%0d.%02d", *(p + 13) >> 4, *(p + 13) & 0x0f);
         }
         check_uart_settings(9600);
       }
@@ -201,7 +201,7 @@ namespace esphome
           else if (!*check)
           {
             // wrong data
-            ESP_LOGV(TAG, "Byte %i of received data frame is invalid.", data_index_);
+            LOG_VERBOSE(TAG, "Byte %i of received data frame is invalid.", data_index_);
             data_index_ = 0;
           }
           else
@@ -254,11 +254,11 @@ namespace esphome
       {
         if (level < 0 || level > 5)
         {
-          ESP_LOGI(TAG, "Ignoring invalid level request: %i", level);
+          LOG_INFO(TAG, "Ignoring invalid level request: %i", level);
           return;
         }
 
-        ESP_LOGI(TAG, "Setting level to: %i", level);
+        LOG_INFO(TAG, "Setting level to: %i", level);
         {
           uint8_t command[1] = {(uint8_t)level};
           write_command_(CMD_SET_LEVEL, command, sizeof(command));
@@ -269,11 +269,11 @@ namespace esphome
       {
         if (temperature < 12.0f || temperature > 29.0f)
         {
-          ESP_LOGI(TAG, "Ignoring invalid temperature request: %i", (int)temperature);
+          LOG_INFO(TAG, "Ignoring invalid temperature request: %i", (int)temperature);
           return;
         }
 
-        ESP_LOGI(TAG, "Setting temperature to: %i", (int)temperature);
+        LOG_INFO(TAG, "Setting temperature to: %i", (int)temperature);
         {
           uint8_t command[1] = {(uint8_t)((temperature + 20.0f) * 2.0f)};
           write_command_(CMD_SET_COMFORT_TEMPERATURE, command, sizeof(command));
@@ -293,18 +293,18 @@ namespace esphome
             supply_high_,
             unused_byte_};
         // Debug write to check if the values are correct
-        ESP_LOGD(TAG, "-----------------------------------");
-        ESP_LOGD(TAG, "SET VENTILATION LEVEL %%:");
-        ESP_LOGD(TAG, "- Supply Absent: %02x\t(%d%%)", supply_absent_, supply_absent_);
-        ESP_LOGD(TAG, "- Exhaust Absent: %02x\t(%d%%)", exhaust_absent_, exhaust_absent_);
-        ESP_LOGD(TAG, "- Supply Low: %02x\t(%d%%)", supply_low_, supply_low_);
-        ESP_LOGD(TAG, "- Exhaust Low: %02x\t(%d%%)", exhaust_low_, exhaust_low_);
-        ESP_LOGD(TAG, "- Supply Medium: %02x\t(%d%%)", supply_medium_, supply_medium_);
-        ESP_LOGD(TAG, "- Exhaust Medium: %02x\t(%d%%)", exhaust_medium_, exhaust_medium_);
-        ESP_LOGD(TAG, "- Supply High: %02x\t(%d%%)", supply_high_, supply_high_);
-        ESP_LOGD(TAG, "- Exhaust High: %02x\t(%d%%)", exhaust_high_, exhaust_high_);
-        // ESP_LOGD(TAG, "- Unused Byte: %02x", unused_byte_);
-        ESP_LOGD(TAG, "-----------------------------------");
+        LOG_DEBUG(TAG, "-----------------------------------");
+        LOG_DEBUG(TAG, "SET VENTILATION LEVEL %%:");
+        LOG_DEBUG(TAG, "- Supply Absent: %02x\t(%d%%)", supply_absent_, supply_absent_);
+        LOG_DEBUG(TAG, "- Exhaust Absent: %02x\t(%d%%)", exhaust_absent_, exhaust_absent_);
+        LOG_DEBUG(TAG, "- Supply Low: %02x\t(%d%%)", supply_low_, supply_low_);
+        LOG_DEBUG(TAG, "- Exhaust Low: %02x\t(%d%%)", exhaust_low_, exhaust_low_);
+        LOG_DEBUG(TAG, "- Supply Medium: %02x\t(%d%%)", supply_medium_, supply_medium_);
+        LOG_DEBUG(TAG, "- Exhaust Medium: %02x\t(%d%%)", exhaust_medium_, exhaust_medium_);
+        LOG_DEBUG(TAG, "- Supply High: %02x\t(%d%%)", supply_high_, supply_high_);
+        LOG_DEBUG(TAG, "- Exhaust High: %02x\t(%d%%)", exhaust_high_, exhaust_high_);
+        // LOG_DEBUG(TAG, "- Unused Byte: %02x", unused_byte_);
+        LOG_DEBUG(TAG, "-----------------------------------");
 
         if (can_send_ventilation_levels_)
         {
@@ -312,7 +312,7 @@ namespace esphome
         }
         else
         {
-          ESP_LOGW(TAG, "Can't send ventilation levels yet");
+          LOG_WARN(TAG, "Can't send ventilation levels yet");
         }
       }
 
@@ -391,7 +391,7 @@ namespace esphome
 
         if ((COMMAND_LEN_HEAD + data_length + COMMAND_LEN_TAIL) > sizeof(data_))
         {
-          ESP_LOGW(TAG, "ComfoAir message too large");
+          LOG_WARN(TAG, "ComfoAir message too large");
           return false;
         }
 
@@ -406,8 +406,8 @@ namespace esphome
           uint8_t checksum = comfoair_checksum_(data_ + 2, COMMAND_LEN_HEAD + data_length - 2);
           if (checksum != byte)
           {
-            // ESP_LOGW(TAG, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", data_[0], data_[1], data_[2], data_[3], data_[4], data_[5], data_[6], data_[7], data_[8], data_[9], data_[10]);
-            ESP_LOGW(TAG, "ComfoAir Checksum doesn't match: 0x%02X!=0x%02X", byte, checksum);
+            // LOG_WARN(TAG, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", data_[0], data_[1], data_[2], data_[3], data_[4], data_[5], data_[6], data_[7], data_[8], data_[9], data_[10]);
+            LOG_WARN(TAG, "ComfoAir Checksum doesn't match: 0x%02X!=0x%02X", byte, checksum);
             return false;
           }
           return true;
@@ -557,7 +557,7 @@ namespace esphome
         case RES_GET_VENTILATION_LEVEL:
         {
 
-          ESP_LOGD(TAG, "Level %02x", msg[8]);
+          LOG_DEBUG(TAG, "Level %02x", msg[8]);
 
           exhaust_absent_ = msg[0];
           exhaust_low_ = msg[1];
@@ -587,18 +587,18 @@ namespace esphome
 
           can_send_ventilation_levels_ = true;
 
-          ESP_LOGD(TAG, "-----------------------------------");
-          ESP_LOGD(TAG, "READ VENTILATION LEVEL %%:");
-          ESP_LOGD(TAG, "- Supply Absent: %02x\t(%d%%)", supply_absent_, supply_absent_);
-          ESP_LOGD(TAG, "- Exhaust Absent: %02x\t(%d%%)", exhaust_absent_, exhaust_absent_);
-          ESP_LOGD(TAG, "- Supply Low: %02x\t(%d%%)", supply_low_, supply_low_);
-          ESP_LOGD(TAG, "- Exhaust Low: %02x\t(%d%%)", exhaust_low_, exhaust_low_);
-          ESP_LOGD(TAG, "- Supply Medium: %02x\t(%d%%)", supply_medium_, supply_medium_);
-          ESP_LOGD(TAG, "- Exhaust Medium: %02x\t(%d%%)", exhaust_medium_, exhaust_medium_);
-          ESP_LOGD(TAG, "- Supply High: %02x\t(%d%%)", supply_high_, supply_high_);
-          ESP_LOGD(TAG, "- Exhaust High: %02x\t(%d%%)", exhaust_high_, exhaust_high_);
-          // ESP_LOGD(TAG, "- Unused Byte: %02x", unused_byte_);
-          ESP_LOGD(TAG, "-----------------------------------");
+          LOG_DEBUG(TAG, "-----------------------------------");
+          LOG_DEBUG(TAG, "READ VENTILATION LEVEL %%:");
+          LOG_DEBUG(TAG, "- Supply Absent: %02x\t(%d%%)", supply_absent_, supply_absent_);
+          LOG_DEBUG(TAG, "- Exhaust Absent: %02x\t(%d%%)", exhaust_absent_, exhaust_absent_);
+          LOG_DEBUG(TAG, "- Supply Low: %02x\t(%d%%)", supply_low_, supply_low_);
+          LOG_DEBUG(TAG, "- Exhaust Low: %02x\t(%d%%)", exhaust_low_, exhaust_low_);
+          LOG_DEBUG(TAG, "- Supply Medium: %02x\t(%d%%)", supply_medium_, supply_medium_);
+          LOG_DEBUG(TAG, "- Exhaust Medium: %02x\t(%d%%)", exhaust_medium_, exhaust_medium_);
+          LOG_DEBUG(TAG, "- Supply High: %02x\t(%d%%)", supply_high_, supply_high_);
+          LOG_DEBUG(TAG, "- Exhaust High: %02x\t(%d%%)", exhaust_high_, exhaust_high_);
+          // LOG_DEBUG(TAG, "- Unused Byte: %02x", unused_byte_);
+          LOG_DEBUG(TAG, "-----------------------------------");
 
           if (return_air_level != nullptr)
           {
@@ -1015,7 +1015,7 @@ namespace esphome
             intake_fan_speed_rpm != nullptr ||
             exhaust_fan_speed_rpm != nullptr)
         {
-          ESP_LOGD(TAG, "getting fan status");
+          LOG_DEBUG(TAG, "getting fan status");
           write_command_(CMD_GET_FAN_STATUS, nullptr, 0);
         }
       }
@@ -1026,7 +1026,7 @@ namespace esphome
             bypass_valve_open != nullptr ||
             preheating_state != nullptr)
         {
-          ESP_LOGD(TAG, "getting valve status");
+          LOG_DEBUG(TAG, "getting valve status");
           write_command_(CMD_GET_VALVE_STATUS, nullptr, 0);
         }
       }
@@ -1035,7 +1035,7 @@ namespace esphome
       {
         if (filter_status != nullptr)
         {
-          ESP_LOGD(TAG, "getting error status");
+          LOG_DEBUG(TAG, "getting error status");
           write_command_(CMD_GET_FAULTS, nullptr, 0);
         }
       }
@@ -1047,7 +1047,7 @@ namespace esphome
             bypass_correction != nullptr ||
             summer_mode != nullptr)
         {
-          ESP_LOGD(TAG, "getting bypass control");
+          LOG_DEBUG(TAG, "getting bypass control");
           write_command_(CMD_GET_BYPASS_CONTROL_STATUS, nullptr, 0);
         }
       }
@@ -1059,7 +1059,7 @@ namespace esphome
             return_air_temperature != nullptr ||
             outside_air_temperature != nullptr)
         {
-          ESP_LOGD(TAG, "getting temperature");
+          LOG_DEBUG(TAG, "getting temperature");
           write_command_(CMD_GET_TEMPERATURE_STATUS, nullptr, 0);
         }
       }
@@ -1068,38 +1068,38 @@ namespace esphome
       {
         if (enthalpy_temperature != nullptr)
         {
-          ESP_LOGD(TAG, "getting sensor data");
+          LOG_DEBUG(TAG, "getting sensor data");
           write_command_(CMD_GET_SENSOR_DATA, nullptr, 0);
         }
       }
 
       void get_ventilation_level_()
       {
-        ESP_LOGD(TAG, "getting ventilation level");
+        LOG_DEBUG(TAG, "getting ventilation level");
         write_command_(CMD_GET_VENTILATION_LEVEL, nullptr, 0);
       }
 
       void get_temperatures_()
       {
-        ESP_LOGD(TAG, "getting temperatures");
+        LOG_DEBUG(TAG, "getting temperatures");
         write_command_(CMD_GET_TEMPERATURES, nullptr, 0);
       }
 
       void get_operation_hours_()
       {
-        ESP_LOGD(TAG, "getting operation hours");
+        LOG_DEBUG(TAG, "getting operation hours");
         write_command_(CMD_GET_OPERATION_HOURS, nullptr, 0);
       }
 
       void get_preheating_status_()
       {
-        ESP_LOGD(TAG, "getting preheating status");
+        LOG_DEBUG(TAG, "getting preheating status");
         write_command_(CMD_GET_PREHEATING_STATUS, nullptr, 0);
       }
 
       void get_time_delay_()
       {
-        ESP_LOGD(TAG, "getting time delay");
+        LOG_DEBUG(TAG, "getting time delay");
         write_command_(CMD_GET_TIME_DELAY, nullptr, 0);
       }
 
