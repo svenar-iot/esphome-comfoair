@@ -34,12 +34,12 @@ esphome:
     version: 1.1.7
 
 external_components:
-  - source:
-      type: git
-      url: https://github.com/svenar-iot/esphome-comfoair
-    components: [comfoair_ca]
-  # - source: components
+  # - source:
+  #     type: git
+  #     url: https://github.com/svenar-iot/esphome-comfoair
   #   components: [comfoair_ca]
+  - source: components
+    components: [comfoair_ca]
 
 dashboard_import:
   package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml@v1.1.7
@@ -325,6 +325,18 @@ switch:
     id: restart_with_factory_default_settings
     name: Restart with Factory Default Settings
     icon: mdi:restart-alert
+  - platform: template
+    name: "Developer Mode"
+    id: developer_mode
+    icon: "mdi:bug"
+    lambda: |-
+      return id(comfoair_climate).get_developer_mode();
+    turn_on_action:
+      - lambda: |-
+          id(comfoair_climate).set_developer_mode(true);
+    turn_off_action:
+      - lambda: |-
+          id(comfoair_climate).set_developer_mode(false);
   - platform: template
     name: "Supply Shutoff"
     id: supply_shutoff

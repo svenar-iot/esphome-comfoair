@@ -2,17 +2,20 @@
 
 #include "esphome/core/log.h"
 
-namespace comfoair_ca
+namespace esphome
 {
+  namespace comfoair_ca
+  {
 
-    extern bool logEnable;
+    bool logEnable = false;
 
-} // namespace comfoair_ca
+  } // namespace comfoair_ca
+} // namespace esphome
 
 #define LOG_INFO(tag, format, ...)                \
     do                                            \
     {                                             \
-        if (::comfoair_ca::logEnable)             \
+        if (::esphome::comfoair_ca::logEnable)             \
         {                                         \
             ESP_LOGI(tag, format, ##__VA_ARGS__); \
         }                                         \
@@ -21,7 +24,7 @@ namespace comfoair_ca
 #define LOG_CONFIG(tag, format, ...)                   \
     do                                                 \
     {                                                  \
-        if (::comfoair_ca::logEnable)                  \
+        if (::esphome::comfoair_ca::logEnable)                  \
         {                                              \
             ESP_LOGCONFIG(tag, format, ##__VA_ARGS__); \
         }                                              \
@@ -30,7 +33,7 @@ namespace comfoair_ca
 #define LOG_WARN(tag, format, ...)                \
     do                                            \
     {                                             \
-        if (::comfoair_ca::logEnable)             \
+        if (::esphome::comfoair_ca::logEnable)             \
         {                                         \
             ESP_LOGW(tag, format, ##__VA_ARGS__); \
         }                                         \
@@ -39,7 +42,7 @@ namespace comfoair_ca
 #define LOG_ERROR(tag, format, ...)               \
     do                                            \
     {                                             \
-        if (::comfoair_ca::logEnable)             \
+        if (::esphome::comfoair_ca::logEnable)             \
         {                                         \
             ESP_LOGE(tag, format, ##__VA_ARGS__); \
         }                                         \
@@ -48,7 +51,7 @@ namespace comfoair_ca
 #define LOG_DEBUG(tag, format, ...)               \
     do                                            \
     {                                             \
-        if (::comfoair_ca::logEnable)             \
+        if (::esphome::comfoair_ca::logEnable)             \
         {                                         \
             ESP_LOGD(tag, format, ##__VA_ARGS__); \
         }                                         \
@@ -57,7 +60,7 @@ namespace comfoair_ca
 #define LOG_VERBOSE(tag, format, ...)             \
     do                                            \
     {                                             \
-        if (::comfoair_ca::logEnable)             \
+        if (::esphome::comfoair_ca::logEnable)             \
         {                                         \
             ESP_LOGV(tag, format, ##__VA_ARGS__); \
         }                                         \
@@ -66,7 +69,7 @@ namespace comfoair_ca
 #define LOG_VERY_VERBOSE(tag, format, ...)         \
     do                                             \
     {                                              \
-        if (::comfoair_ca::logEnable)              \
+        if (::esphome::comfoair_ca::logEnable)              \
         {                                          \
             ESP_LOGVV(tag, format, ##__VA_ARGS__); \
         }                                          \

@@ -2,6 +2,8 @@
 
 #include "esphome/core/component.h"
 #include "esphome/core/optional.h"
+#include "esphome/core/preferences.h"
+#include "esphome/core/preference_backend.h"
 
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/climate/climate.h"
@@ -20,6 +22,8 @@ namespace esphome
   {
 
     static const char *TAG = "comfoair_ca";
+    
+    const uint32_t preference_developer_mode = 0x12345678;
 
     class ComfoAirComponent : public climate::Climate, public PollingComponent, public uart::UARTDevice
     {
@@ -28,6 +32,16 @@ namespace esphome
       ComfoAirComponent() : Climate(),
                             PollingComponent(600),
                             UARTDevice() {}
+
+      void setup() override
+      {
+        this->pref_ = global_preferences->make_preference<bool>(preference_developer_mode);
+        bool value;
+        if (this->pref_.load(&value))
+        {
+          ::esphome::comfoair_ca::logEnable = value;
+        }
+      }
 
       /// Return the traits of this controller.
       climate::ClimateTraits traits() override
@@ -234,7 +248,19 @@ namespace esphome
       }
       void set_uart_component(uart::UARTComponent *parent) { set_uart_parent(parent); }
 
+      void set_developer_mode(bool enable)
+      {
+        ::esphome::comfoair_ca::logEnable = enable;
+        this->pref_.save(&enable);
+      }
+
+      bool get_developer_mode() const
+      {
+        return ::esphome::comfoair_ca::logEnable;
+      }
+
     protected:
+      ESPPreferenceObject pref_;
       std::string filter_ascii_(const char *input)
       {
         std::string out;
