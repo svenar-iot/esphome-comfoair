@@ -31,18 +31,18 @@ esphome:
   name_add_mac_suffix: true
   project:
     name: "${developer}.${description}"
-    version: 1.1.7
+    version: 1.1.8
 
 external_components:
-  # - source:
-  #     type: git
-  #     url: https://github.com/svenar-iot/esphome-comfoair
-  #   components: [comfoair_ca]
-  - source: components
+  - source:
+      type: git
+      url: https://github.com/svenar-iot/esphome-comfoair
     components: [comfoair_ca]
+  # - source: components
+  #   components: [comfoair_ca]
 
 dashboard_import:
-  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml@v1.1.7
+  package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml
   import_full_config: false
 
 wifi:
