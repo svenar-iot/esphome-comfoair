@@ -319,6 +319,12 @@ button:
           auto call = id(comfoair_climate).make_call();
           call.set_fan_mode(climate::CLIMATE_FAN_HIGH);
           call.perform();
+  - platform: template
+    name: "Reset Filter"
+    on_press:
+      then:
+        - lambda: |-
+                id(comfoair_climate)->filter_reset();
 
 switch:
   - platform: factory_reset
