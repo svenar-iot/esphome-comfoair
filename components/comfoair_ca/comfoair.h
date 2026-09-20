@@ -22,7 +22,7 @@ namespace esphome
   {
 
     static const char *TAG = "comfoair_ca";
-    
+
     const uint32_t preference_developer_mode = 0x12345678;
 
     class ComfoAirComponent : public climate::Climate, public PollingComponent, public uart::UARTDevice
@@ -363,22 +363,16 @@ namespace esphome
         flush();
       }
 
-      uint8_t comfoair_checksum_(const uint8_t *command_data, uint8_t length) const
+      uint8_t comfoair_checksum_(const uint8_t *data, uint8_t length) const
       {
         uint8_t sum = 173;
-        bool skip = false;
         for (uint8_t i = 0; i < length; i++)
         {
-          if (command_data[i] == 0x07)
-          {
-            if (skip)
-              continue;
-            else
-              skip = true;
-          }
-          sum += command_data[i];
+          sum += data[i];
+          if (data[i] == 0x07 && i + 1 < length && data[i + 1] == 0x07)
+            i++; // skip the inserted duplicate
         }
-        return sum % 256;
+        return sum;
       }
 
       optional<bool> check_byte_() const
