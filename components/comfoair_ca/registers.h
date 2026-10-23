@@ -4,6 +4,7 @@
 // ===================== CORE ======================
 // =================================================
 
+#define COMMAND_MAX_LENGTH 70
 #define COMMAND_PREFIX 0x07
 #define COMMAND_HEAD 0xF0
 #define COMMAND_LEN_HEAD 5
