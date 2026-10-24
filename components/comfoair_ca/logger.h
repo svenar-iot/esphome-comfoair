@@ -6,9 +6,7 @@ namespace esphome
 {
   namespace comfoair_ca
   {
-
-    bool logEnable = false;
-
+    inline bool logEnable = false;
   } // namespace comfoair_ca
 } // namespace esphome
 

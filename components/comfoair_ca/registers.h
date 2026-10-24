@@ -15,6 +15,9 @@
 #define COMMAND_IDX_DATA 4
 #define COMMAND_IDX_MSG_ID 3
 
+#define COMMAND_FRAME_TIMEOUT_MS 200 // Time to wait for a command response
+#define COMMAND_RETRY_GAP_MS 100 // Minimum time between retries of a command after a failed checksum
+
 // =================================================
 // ========== Bootloader (PC an ComfoAir) ==========
 // =================================================
