@@ -333,18 +333,6 @@ switch:
     name: Restart with Factory Default Settings
     icon: mdi:restart-alert
   - platform: template
-    name: "Developer Mode"
-    id: developer_mode
-    icon: "mdi:bug"
-    lambda: |-
-      return id(comfoair_climate).get_developer_mode();
-    turn_on_action:
-      - lambda: |-
-          id(comfoair_climate).set_developer_mode(true);
-    turn_off_action:
-      - lambda: |-
-          id(comfoair_climate).set_developer_mode(false);
-  - platform: template
     name: "Supply Shutoff"
     id: supply_shutoff
     icon: "mdi:fan-off"
@@ -374,6 +362,32 @@ switch:
           if (id(stored_sup_med) == 0) id(stored_sup_med) = 50;
           if (id(stored_sup_hig) == 0) id(stored_sup_hig) = 70;
           id(comfoair_climate).set_supply_levels(id(stored_sup_abs), id(stored_sup_low), id(stored_sup_med), id(stored_sup_hig));
+
+select:
+  - platform: template
+    name: "Developer Mode"
+    id: developer_mode
+    icon: "mdi:bug"
+    optimistic: false
+    options:
+      - "None"
+      - "Debug"
+      - "Verbose"
+    lambda: |-
+      switch (id(comfoair_climate).get_developer_mode()) {
+        case esphome::comfoair_ca::LogLevel::Verbose: return std::string("Verbose");
+        case esphome::comfoair_ca::LogLevel::Debug:   return std::string("Debug");
+        default:                                      return std::string("None");
+      }
+    set_action:
+      - lambda: |-
+          if (x == "Verbose") {
+            id(comfoair_climate).set_developer_mode(esphome::comfoair_ca::LogLevel::Verbose);
+          } else if (x == "Debug") {
+            id(comfoair_climate).set_developer_mode(esphome::comfoair_ca::LogLevel::Debug);
+          } else {
+            id(comfoair_climate).set_developer_mode(esphome::comfoair_ca::LogLevel::None);
+          }
 
 number:
   - platform: template

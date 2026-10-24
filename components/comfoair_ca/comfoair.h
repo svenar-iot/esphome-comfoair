@@ -31,8 +31,9 @@ namespace esphome
 
     inline constexpr uint32_t PREFERENCE_DEVELOPER_MODE{0x12345678};
     inline constexpr uint32_t POLL_INTERVAL_MS{600};
-    inline constexpr std::size_t RAW_TRACE_CAPACITY{COMMAND_MAX_LENGTH};
 
+    inline constexpr std::size_t TRACE_CHARS_PER_BYTE{3};
+    
     class ComfoAirComponent;
 
     bool decode_device_info(ComfoAirComponent &component);
@@ -70,8 +71,8 @@ namespace esphome
       }
       void set_uart_component(uart::UARTComponent *parent) { set_uart_parent(parent); }
 
-      void set_developer_mode(bool enable);
-      bool get_developer_mode() const { return logEnable; }
+      void set_developer_mode(LogLevel level);
+      LogLevel get_developer_mode() const { return logLevel; }
 
       void advance_update_counter();
       int8_t update_counter() const { return update_counter_; }
@@ -287,8 +288,6 @@ namespace esphome
       void reset_frame();
       void maybe_retry();
 
-      void raw_trace_reset() { raw_trace_length_ = 0; }
-      void raw_trace_append(uint8_t byte);
       void raw_trace_dump(const char *level_tag) const;
 
       uint8_t payload_byte(uint8_t index) const;
@@ -302,9 +301,6 @@ namespace esphome
       std::size_t data_index_{0};
       bool skip_escaped_07_{false};
       uint32_t frame_start_ms_{0};
-
-      uint8_t raw_trace_[RAW_TRACE_CAPACITY]{};
-      std::size_t raw_trace_length_{0};
 
       bool retry_pending_{false};
       uint32_t last_retry_ms_{0};

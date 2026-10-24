@@ -15,19 +15,17 @@ namespace esphome
       constexpr uint8_t MAX_PAYLOAD_BYTES{
           static_cast<uint8_t>((COMMAND_MAX_LENGTH - 7) / 2)};
 
-      constexpr std::size_t TRACE_CHARS_PER_BYTE{3};
-
       constexpr int UPDATE_STEP_FIRST{-4};
 
     }
 
     void ComfoAirComponent::setup()
     {
-      pref_ = global_preferences->make_preference<bool>(PREFERENCE_DEVELOPER_MODE);
-      bool stored_developer_mode{false};
+      pref_ = global_preferences->make_preference<uint8_t>(PREFERENCE_DEVELOPER_MODE);
+      uint8_t stored_developer_mode{static_cast<uint8_t>(LogLevel::None)};
       if (pref_.load(&stored_developer_mode))
       {
-        logEnable = stored_developer_mode;
+        logLevel = static_cast<LogLevel>(stored_developer_mode);
       }
     }
 
@@ -45,10 +43,11 @@ namespace esphome
                  connector_board_version_[1]);
     }
 
-    void ComfoAirComponent::set_developer_mode(bool enable)
+    void ComfoAirComponent::set_developer_mode(LogLevel level)
     {
-      logEnable = enable;
-      pref_.save(&enable);
+      logLevel = level;
+      const uint8_t stored{static_cast<uint8_t>(level)};
+      pref_.save(&stored);
     }
 
     void ComfoAirComponent::advance_update_counter()
@@ -80,14 +79,14 @@ namespace esphome
         if (intake_fan_speed != nullptr || exhaust_fan_speed != nullptr ||
             intake_fan_speed_rpm != nullptr || exhaust_fan_speed_rpm != nullptr)
         {
-          LOG_DEBUG(TAG, "getting fan status");
+          LOG_VERBOSE(TAG, "getting fan status");
           write_command(static_cast<uint8_t>(SimpleQuery::FanStatus), nullptr, 0);
         }
         break;
       case 1:
         if (bypass_valve != nullptr || bypass_valve_open != nullptr || preheating_state != nullptr)
         {
-          LOG_DEBUG(TAG, "getting valve status");
+          LOG_VERBOSE(TAG, "getting valve status");
           write_command(static_cast<uint8_t>(SimpleQuery::ValveStatus), nullptr, 0);
         }
         break;
@@ -96,39 +95,39 @@ namespace esphome
             return_air_temperature != nullptr || exhaust_air_temperature != nullptr ||
             enthalpy_temperature != nullptr)
         {
-          LOG_DEBUG(TAG, "getting sensor data");
+          LOG_VERBOSE(TAG, "getting sensor data");
           write_command(static_cast<uint8_t>(SimpleQuery::SensorData), nullptr, 0);
         }
         break;
       case 3:
-        LOG_DEBUG(TAG, "getting ventilation level");
+        LOG_VERBOSE(TAG, "getting ventilation level");
         write_command(static_cast<uint8_t>(SimpleQuery::VentilationLevel), nullptr, 0);
         break;
       case 4:
-        LOG_DEBUG(TAG, "getting temperatures");
+        LOG_VERBOSE(TAG, "getting temperatures");
         write_command(static_cast<uint8_t>(SimpleQuery::Temperatures), nullptr, 0);
         break;
       case 5:
         if (filter_status != nullptr)
         {
-          LOG_DEBUG(TAG, "getting error status");
+          LOG_VERBOSE(TAG, "getting error status");
           write_command(static_cast<uint8_t>(SimpleQuery::Faults), nullptr, 0);
         }
         break;
       case 6:
-        LOG_DEBUG(TAG, "getting bypass control status");
+        LOG_VERBOSE(TAG, "getting bypass control status");
         write_command(static_cast<uint8_t>(SimpleQuery::BypassControlStatus), nullptr, 0);
         break;
       case 7:
-        LOG_DEBUG(TAG, "getting operation hours");
+        LOG_VERBOSE(TAG, "getting operation hours");
         write_command(static_cast<uint8_t>(SimpleQuery::OperationHours), nullptr, 0);
         break;
       case 8:
-        LOG_DEBUG(TAG, "getting preheating status");
+        LOG_VERBOSE(TAG, "getting preheating status");
         write_command(static_cast<uint8_t>(SimpleQuery::PreheatingStatus), nullptr, 0);
         break;
       case 9:
-        LOG_DEBUG(TAG, "getting time delay");
+        LOG_VERBOSE(TAG, "getting time delay");
         write_command(static_cast<uint8_t>(SimpleQuery::TimeDelay), nullptr, 0);
         break;
       default:
@@ -138,36 +137,37 @@ namespace esphome
       advance_update_counter();
     }
 
-    void ComfoAirComponent::raw_trace_append(uint8_t byte)
-    {
-      if (raw_trace_length_ < RAW_TRACE_CAPACITY)
-      {
-        raw_trace_[raw_trace_length_] = byte;
-        ++raw_trace_length_;
-      }
-    }
+
+
 
     void ComfoAirComponent::raw_trace_dump(const char *level_tag) const
     {
-      char line[(RAW_TRACE_CAPACITY * TRACE_CHARS_PER_BYTE) + 4 + 1];
-      line[0] = 'R';
-      line[1] = 'X';
-      line[2] = ':';
-      line[3] = ' ';
-      line[4 + (raw_trace_length_ * TRACE_CHARS_PER_BYTE)] = '\0';
-      for (std::size_t i{0}; i < raw_trace_length_; ++i)
+      if (logLevel < LogLevel::Debug)
       {
-        snprintf(line + 4 + (i * TRACE_CHARS_PER_BYTE),
-                 TRACE_CHARS_PER_BYTE + 1, "%02X ", raw_trace_[i]);
+        return;
       }
-      LOG_DEBUG(TAG, "%s%s(%i bytes)", level_tag, line, static_cast<int>(raw_trace_length_));
+      
+      const std::size_t count{data_index_ + 1};
+      constexpr std::size_t PREFIX_CHARS{4};
+      char line[PREFIX_CHARS + (COMMAND_MAX_LENGTH * TRACE_CHARS_PER_BYTE) + 1];
+      const int prefix{snprintf(line, sizeof(line), "%sRX: ", level_tag)};
+      if (prefix < 0)
+      {
+        return;
+      }
+
+      std::size_t offset{static_cast<std::size_t>(prefix)};
+      for (std::size_t i{0}; i < count && i < COMMAND_MAX_LENGTH; ++i)
+      {
+        offset += snprintf(line + offset, sizeof(line) - offset, "%02X ", data_[i]);
+      }
+      LOG_DEBUG(TAG, "%s(%i bytes)", line, static_cast<int>(count));
     }
 
     void ComfoAirComponent::reset_frame()
     {
       data_index_ = 0;
       skip_escaped_07_ = false;
-      raw_trace_reset();
     }
 
     void ComfoAirComponent::feed_byte(uint8_t byte)
@@ -177,7 +177,6 @@ namespace esphome
         skip_escaped_07_ = false;
         if (byte == ESCAPE_BYTE)
         {
-          raw_trace_append(byte);
           return;
         }
       }
@@ -187,10 +186,9 @@ namespace esphome
         frame_start_ms_ = millis();
       }
 
-      raw_trace_append(byte);
-
       if (data_index_ >= COMMAND_MAX_LENGTH)
       {
+        raw_trace_dump("");
         LOG_WARN(TAG, "Frame overflow, discarding %i bytes", static_cast<int>(data_index_));
         reset_frame();
         return;
@@ -205,11 +203,15 @@ namespace esphome
       case ByteVerdict::Complete:
         if (data_[COMMAND_ID_ACK] != FRAME_ACK)
         {
+          if (logLevel >= LogLevel::Verbose)
+          {
+            raw_trace_dump("");
+          }
           parse_data();
         }
         else
         {
-          LOG_DEBUG(TAG, "ACK");
+          LOG_VERBOSE(TAG, "ACK");
         }
         reset_frame();
         return;
@@ -230,8 +232,9 @@ namespace esphome
         return;
 
       case ByteVerdict::Invalid:
-        LOG_VERBOSE(TAG, "Byte %i of received data frame is invalid.",
-                    static_cast<int>(data_index_));
+        raw_trace_dump("");
+        LOG_DEBUG(TAG, "Byte %i of received data frame is invalid.",
+                  static_cast<int>(data_index_));
         reset_frame();
         return;
 
@@ -266,6 +269,7 @@ namespace esphome
       if (data_index_ > 0 && millis() - frame_start_ms_ > COMMAND_FRAME_TIMEOUT_MS)
       {
         const std::size_t declared{declared_frame_length(data_)};
+        raw_trace_dump("");
         LOG_WARN(TAG, "Frame incomplete after %ims (%i of %i bytes), discarding",
                  static_cast<int>(COMMAND_FRAME_TIMEOUT_MS),
                  static_cast<int>(data_index_),
@@ -340,18 +344,17 @@ namespace esphome
 
     void ComfoAirComponent::write_tx(const uint8_t *data, std::size_t length)
     {
-      char line[(TX_BUFFER_CAPACITY * TRACE_CHARS_PER_BYTE) + 4 + 1];
-      line[0] = 'T';
-      line[1] = 'X';
-      line[2] = ':';
-      line[3] = ' ';
-      line[4 + (length * TRACE_CHARS_PER_BYTE)] = '\0';
-      for (std::size_t i{0}; i < length; ++i)
+      if (logLevel >= LogLevel::Verbose)
       {
-        snprintf(line + 4 + (i * TRACE_CHARS_PER_BYTE),
-                 TRACE_CHARS_PER_BYTE + 1, "%02X ", data[i]);
+        char line[4 + (TX_BUFFER_CAPACITY * TRACE_CHARS_PER_BYTE) + 1];
+        snprintf(line, sizeof(line), "TX: ");
+        for (std::size_t i{0}; i < length; ++i)
+        {
+          snprintf(line + 4 + (i * TRACE_CHARS_PER_BYTE),
+                   TRACE_CHARS_PER_BYTE + 1, "%02X ", data[i]);
+        }
+        LOG_VERBOSE(TAG, "%s", line);
       }
-      LOG_DEBUG(TAG, "%s", line);
 
       write_array(data, length);
       flush();
@@ -395,7 +398,6 @@ namespace esphome
 
     void ComfoAirComponent::parse_data()
     {
-      raw_trace_dump("");
       status_clear_warning();
 
       const uint8_t command{data_[COMMAND_IDX_MSG_ID]};
