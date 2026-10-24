@@ -1,4 +1,4 @@
-#include "comfoair_climate.h"
+#include "climate.h"
 
 namespace esphome
 {

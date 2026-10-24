@@ -1,4 +1,4 @@
-#include "comfoair_parse_fans.h"
+#include "parse_fans.h"
 
 #include "comfoair.h"
 

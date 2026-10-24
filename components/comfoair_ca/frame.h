@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "comfoair_checksum.h"
+#include "checksum.h"
 
 namespace esphome
 {

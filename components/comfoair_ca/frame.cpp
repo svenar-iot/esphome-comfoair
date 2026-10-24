@@ -1,4 +1,4 @@
-#include "comfoair_frame.h"
+#include "frame.h"
 
 namespace esphome
 {

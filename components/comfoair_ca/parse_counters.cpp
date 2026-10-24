@@ -1,7 +1,7 @@
 // 0xDA mixes 24-bit and 16-bit big-endian counters; 0xDE is eight single-byte
 // minute values.
 
-#include "comfoair_parse_counters.h"
+#include "parse_counters.h"
 
 #include "comfoair.h"
 

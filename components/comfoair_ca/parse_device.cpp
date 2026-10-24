@@ -1,4 +1,4 @@
-#include "comfoair_parse_device.h"
+#include "parse_device.h"
 
 #include "comfoair.h"
 

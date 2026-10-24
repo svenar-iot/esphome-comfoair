@@ -1,7 +1,7 @@
 // 0xD2 gates each temperature behind a presence bitmask at byte 5, so a
 // sensor that is not fitted is skipped rather than reported as -20 C.
 
-#include "comfoair_parse_temperatures.h"
+#include "parse_temperatures.h"
 
 #include "comfoair.h"
 

@@ -16,10 +16,10 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 
-#include "comfoair_checksum.h"
-#include "comfoair_commands.h"
-#include "comfoair_frame.h"
-#include "comfoair_rpm_filter.h"
+#include "checksum.h"
+#include "commands.h"
+#include "frame.h"
+#include "rpm_filter.h"
 #include "logger.h"
 #include "registers.h"
 

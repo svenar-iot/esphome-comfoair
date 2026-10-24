@@ -1,5 +1,5 @@
 
-#include "comfoair_parse_ventilation.h"
+#include "parse_ventilation.h"
 
 #include "comfoair.h"
 

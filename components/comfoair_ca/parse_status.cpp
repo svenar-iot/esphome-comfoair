@@ -1,5 +1,5 @@
 
-#include "comfoair_parse_status.h"
+#include "parse_status.h"
 
 #include "comfoair.h"
 

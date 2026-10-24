@@ -1,4 +1,4 @@
-#include "comfoair_commands.h"
+#include "commands.h"
 
 namespace esphome
 {
