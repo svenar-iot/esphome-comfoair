@@ -19,6 +19,7 @@
 #include "comfoair_checksum.h"
 #include "comfoair_commands.h"
 #include "comfoair_frame.h"
+#include "comfoair_rpm_filter.h"
 #include "logger.h"
 #include "registers.h"
 
@@ -329,6 +330,9 @@ namespace esphome
       uint8_t exhaust_high_{0};
       uint8_t unused_byte_{0};
       bool can_send_ventilation_levels_{false};
+
+      MedianFilter3 intake_rpm_filter{};
+      MedianFilter3 exhaust_rpm_filter{};
 
       ESPPreferenceObject pref_;
     };

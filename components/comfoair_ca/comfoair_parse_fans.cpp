@@ -29,15 +29,23 @@ namespace esphome
       const uint16_t intake_divisor{component.payload_word(2)};
       if (component.intake_fan_speed_rpm != nullptr && intake_divisor != 0)
       {
-        component.intake_fan_speed_rpm->publish_state(
-            FAN_RPM_SCALE / static_cast<float>(intake_divisor));
+        const float rpm{FAN_RPM_SCALE / static_cast<float>(intake_divisor)};
+        float filtered{0.0F};
+        if (component.intake_rpm_filter.update(rpm, filtered))
+        {
+          component.intake_fan_speed_rpm->publish_state(filtered);
+        }
       }
 
       const uint16_t exhaust_divisor{component.payload_word(4)};
       if (component.exhaust_fan_speed_rpm != nullptr && exhaust_divisor != 0)
       {
-        component.exhaust_fan_speed_rpm->publish_state(
-            FAN_RPM_SCALE / static_cast<float>(exhaust_divisor));
+        const float rpm{FAN_RPM_SCALE / static_cast<float>(exhaust_divisor)};
+        float filtered{0.0F};
+        if (component.exhaust_rpm_filter.update(rpm, filtered))
+        {
+          component.exhaust_fan_speed_rpm->publish_state(filtered);
+        }
       }
 
       return true;
