@@ -300,6 +300,7 @@ namespace esphome
       uint8_t data_[COMMAND_MAX_LENGTH]{};
       std::size_t data_index_{0};
       bool skip_escaped_07_{false};
+      bool discarding_{false};
       uint32_t frame_start_ms_{0};
 
       bool retry_pending_{false};

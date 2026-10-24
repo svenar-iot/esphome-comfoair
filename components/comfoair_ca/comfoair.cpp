@@ -172,6 +172,11 @@ namespace esphome
 
     void ComfoAirComponent::feed_byte(uint8_t byte)
     {
+      if (discarding_)
+      {
+        return;
+      }
+
       if (skip_escaped_07_)
       {
         skip_escaped_07_ = false;
@@ -217,6 +222,7 @@ namespace esphome
         return;
 
       case ByteVerdict::BadChecksum:
+      {
         raw_trace_dump("");
         LOG_WARN(TAG, "Checksum mismatch on 0x%02X: got 0x%02X expected 0x%02X",
                  data_[COMMAND_IDX_MSG_ID], byte, check.expected_checksum);
@@ -229,7 +235,9 @@ namespace esphome
           last_retry_ms_ = millis();
         }
         reset_frame();
+        discarding_ = true;
         return;
+      }
 
       case ByteVerdict::Invalid:
         raw_trace_dump("");
@@ -279,6 +287,7 @@ namespace esphome
 
       if (available() == 0)
       {
+        discarding_ = false;
         maybe_retry();
       }
 
