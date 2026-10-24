@@ -18,14 +18,15 @@ namespace esphome
       constexpr int UPDATE_STEP_FIRST{-4};
 
     }
-
     void ComfoAirComponent::setup()
     {
       pref_ = global_preferences->make_preference<uint8_t>(PREFERENCE_DEVELOPER_MODE);
       uint8_t stored_developer_mode{static_cast<uint8_t>(LogLevel::None)};
       if (pref_.load(&stored_developer_mode))
       {
-        logLevel = static_cast<LogLevel>(stored_developer_mode);
+        logLevel = (stored_developer_mode <= static_cast<uint8_t>(LogLevel::Verbose))
+                       ? static_cast<LogLevel>(stored_developer_mode)
+                       : LogLevel::None;
       }
     }
 
@@ -47,7 +48,10 @@ namespace esphome
     {
       logLevel = level;
       const uint8_t stored{static_cast<uint8_t>(level)};
-      pref_.save(&stored);
+      if (!pref_.save(&stored))
+      {
+        LOG_WARN(TAG, "Developer mode not persisted (preference write failed)");
+      }
     }
 
     void ComfoAirComponent::advance_update_counter()
@@ -137,16 +141,13 @@ namespace esphome
       advance_update_counter();
     }
 
-
-
-
     void ComfoAirComponent::raw_trace_dump(const char *level_tag) const
     {
       if (logLevel < LogLevel::Debug)
       {
         return;
       }
-      
+
       const std::size_t count{data_index_ + 1};
       constexpr std::size_t PREFIX_CHARS{4};
       char line[PREFIX_CHARS + (COMMAND_MAX_LENGTH * TRACE_CHARS_PER_BYTE) + 1];
