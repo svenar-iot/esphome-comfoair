@@ -31,15 +31,15 @@ esphome:
   name_add_mac_suffix: true
   project:
     name: "${developer}.${description}"
-    version: 1.1.8
+    version: 1.1.9 (dev)
 
 external_components:
-  - source:
-      type: git
-      url: https://github.com/svenar-iot/esphome-comfoair
-    components: [comfoair_ca]
-  # - source: components
+  # - source:
+  #     type: git
+  #     url: https://github.com/svenar-iot/esphome-comfoair
   #   components: [comfoair_ca]
+  - source: components
+    components: [comfoair_ca]
 
 dashboard_import:
   package_import_url: github://svenar-iot/esphome-comfoair/comfoair_ca.yaml
@@ -50,7 +50,7 @@ wifi:
     ssid: ${node_name}-setup
     password: ${node_name}setup
 
-esp32_improv:
+improv_ble:
   authorizer: none
 
 captive_portal:
@@ -132,6 +132,7 @@ uart:
   baud_rate: 9600
   tx_pin: 17
   rx_pin: 16
+  rx_buffer_size: 512
 
 comfoair_ca:
   id: comfoair_climate
@@ -196,13 +197,13 @@ comfoair_ca:
   options_present:
     name: "Options present"
   fireplace_present:
-    name: "fireplace_present"
+    name: "Fireplace present"
   kitchen_hood_present:
-    name: "kitchen_hood_present"
+    name: "Kitchen hood present"
   postheating_present:
-    name: "postheating_present"
+    name: "Postheating present"
   postheating_pwm_mode_present:
-    name: "postheating_pwm_mode_present"
+    name: "Postheating PWM mode present"
   preheating_present:
     name: "Preheating present"
   bypass_factor:
