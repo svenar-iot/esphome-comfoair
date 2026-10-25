@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace zehnder_comfoair_q
+namespace comfoair_q
 {
     inline std::string airflow_constraints_to_string(const std::vector<uint8_t> &data)
     {

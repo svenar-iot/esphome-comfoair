@@ -1,21 +1,21 @@
-#include "zehnder_comfoair_q.h"
+#include "comfoair_q.h"
 
-namespace zehnder_comfoair_q
+namespace comfoair_q
 {
-    void ZehnderComfoAirQ::setup()
+    void ComfoAirQ::setup()
     {
         // do a first request of all PDOs some time after starting (helpful for long intervals)
         this->set_timeout(1000 * 10, [this]()
                           { this->update(); });
     }
 
-    void ZehnderComfoAirQ::update()
+    void ComfoAirQ::update()
     {
         if (request_ids_.size() > 0)
             request_all_pdos();
     }
 
-    void ZehnderComfoAirQ::request_all_pdos()
+    void ComfoAirQ::request_all_pdos()
     {
         ESP_LOGD(TAG, "Requesting all registered PDOs (count: %d)", request_ids_.size());
 
@@ -25,7 +25,7 @@ namespace zehnder_comfoair_q
             ESP_LOGW(TAG, "Skipping PDO request cycle as last cycle is still in progress.");
     }
 
-    void ZehnderComfoAirQ::request_next_pdo_()
+    void ComfoAirQ::request_next_pdo_()
     {
         if (request_next_pdo_pos_ >= request_ids_.size())
             return;
@@ -43,18 +43,18 @@ namespace zehnder_comfoair_q
         }
     }
 
-    void ZehnderComfoAirQ::request_pdo(uint16_t pdo_id)
+    void ComfoAirQ::request_pdo(uint16_t pdo_id)
     {
-        // ZehnderComfoAirQ does not care for the data length to be set corectly on transmission requests, so there is no need to send any data
+        // ComfoAirQ does not care for the data length to be set corectly on transmission requests, so there is no need to send any data
         this->send_can_message_((pdo_id << 14) + 0x40 + this->local_node_id_, true);
     }
 
-    void ZehnderComfoAirQ::set_level(uint8_t level)
+    void ComfoAirQ::set_level(uint8_t level)
     {
         send_command_set_timer(true, 0x01, 0x01, level);
     }
 
-    void ZehnderComfoAirQ::set_level_float(float state)
+    void ComfoAirQ::set_level_float(float state)
     {
         uint8_t level;
         if (state >= 1)
@@ -70,7 +70,7 @@ namespace zehnder_comfoair_q
         set_level(level);
     }
 
-    void ZehnderComfoAirQ::send_command_set_timer(bool enable, uint8_t subunit_id, uint8_t property_id, uint8_t property_value, uint32_t duration_secs)
+    void ComfoAirQ::send_command_set_timer(bool enable, uint8_t subunit_id, uint8_t property_id, uint8_t property_value, uint32_t duration_secs)
     {
         std::vector<uint8_t> command = {(uint8_t)(enable ? 0x84 : 0x85), 0x15 /* SCHEDULE */, subunit_id, property_id};
         if (enable)
@@ -79,12 +79,12 @@ namespace zehnder_comfoair_q
         send_command(command);
     }
 
-    void ZehnderComfoAirQ::send_command_set_property(uint8_t unit_id, uint8_t subunit_id, uint8_t property_id, uint8_t property_value)
+    void ComfoAirQ::send_command_set_property(uint8_t unit_id, uint8_t subunit_id, uint8_t property_id, uint8_t property_value)
     {
         send_command({0x03, unit_id, subunit_id, property_id, property_value});
     }
 
-    void ZehnderComfoAirQ::send_command(const std::vector<uint8_t> &command)
+    void ComfoAirQ::send_command(const std::vector<uint8_t> &command)
     {
         auto is_multi_message_command = command.size() > 8;
         auto can_id = get_command_can_id_(is_multi_message_command, get_command_next_sequence_number_());
@@ -112,7 +112,7 @@ namespace zehnder_comfoair_q
         }
     }
 
-    uint32_t ZehnderComfoAirQ::get_command_can_id_(bool is_multi_message_command, uint8_t sequence_number)
+    uint32_t ComfoAirQ::get_command_can_id_(bool is_multi_message_command, uint8_t sequence_number)
     {
         return 0x1f << 24 |
                sequence_number << 17 |
@@ -122,13 +122,13 @@ namespace zehnder_comfoair_q
                this->local_node_id_;
     }
 
-    uint8_t ZehnderComfoAirQ::get_command_next_sequence_number_()
+    uint8_t ComfoAirQ::get_command_next_sequence_number_()
     {
         this->command_sequence_number_ = (this->command_sequence_number_ + 1) & 0x3;
         return this->command_sequence_number_;
     }
 
-    void ZehnderComfoAirQ::send_can_message_(uint32_t can_id, bool remote_transmission_request, const std::vector<uint8_t> &data)
+    void ComfoAirQ::send_can_message_(uint32_t can_id, bool remote_transmission_request, const std::vector<uint8_t> &data)
     {
         ESP_LOGD(TAG, "Send can message: id: 0x%08lx (pdo_id: %ld), rtr: %d, size: %d, content: %s", can_id, can_id >> 14,
                  remote_transmission_request, data.size(), format_hex_pretty(data).c_str());

@@ -7,7 +7,7 @@
 using namespace esphome; // needed for ESP_LOGx to work
 using namespace esphome::canbus;
 
-namespace zehnder_comfoair_q
+namespace comfoair_q
 {
     static const char *const TAG = "comfoairq";
 
@@ -46,7 +46,7 @@ namespace zehnder_comfoair_q
         BALANCE_MODE_EXHAUST_ONLY = 2,
     };
 
-    class ZehnderComfoAirQ : public PollingComponent
+    class ComfoAirQ : public PollingComponent
     {
     public:
         void setup() override;
