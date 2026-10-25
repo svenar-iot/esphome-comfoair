@@ -534,6 +534,16 @@ CONFIG_SCHEMA = cv.All(
     .extend(cv.COMPONENT_SCHEMA)
 )
 
+FINAL_VALIDATE_SCHEMA = uart.final_validate_device_schema(
+    "comfoair_ca",
+    baud_rate=9600,
+    require_tx=True,
+    require_rx=True,
+    data_bits=8,
+    parity="NONE",
+    stop_bits=1,
+)
+
 
 def to_code(config):
     """Generates code"""

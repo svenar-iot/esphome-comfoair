@@ -2,48 +2,40 @@
 
 namespace comfoair_q
 {
-
     void ComfoAirQ::setup()
     {
-        // Perform an initial request for all PDOs 10 seconds after startup.
-        this->set_timeout(10000, [this]()
+        // do a first request of all PDOs some time after starting (helpful for long intervals)
+        this->set_timeout(1000 * 10, [this]()
                           { this->update(); });
     }
 
     void ComfoAirQ::update()
     {
-        if (!request_ids_.empty())
-        {
+        if (request_ids_.size() > 0)
             request_all_pdos();
-        }
     }
 
     void ComfoAirQ::request_all_pdos()
     {
-        if (request_next_pdo_pos_ != 0)
-        {
-            ESP_LOGW(TAG, "Skipping PDO request cycle: previous cycle still in progress.");
-            return;
-        }
-
         ESP_LOGD(TAG, "Requesting all registered PDOs (count: %d)", request_ids_.size());
-        request_next_pdo_();
+
+        if (request_next_pdo_pos_ == 0)
+            request_next_pdo_();
+        else
+            ESP_LOGW(TAG, "Skipping PDO request cycle as last cycle is still in progress.");
     }
 
     void ComfoAirQ::request_next_pdo_()
     {
         if (request_next_pdo_pos_ >= request_ids_.size())
-        {
-            request_next_pdo_pos_ = 0;
             return;
-        }
 
-        request_pdo(request_ids_[request_next_pdo_pos_++]);
-
+        this->request_pdo(request_ids_[request_next_pdo_pos_]);
+        request_next_pdo_pos_++;
         if (request_next_pdo_pos_ < request_ids_.size())
         {
-            this->set_timeout(request_delay_, [this]()
-                              { request_next_pdo_(); });
+            this->set_timeout(this->request_delay_, [this]()
+                              { this->request_next_pdo_(); });
         }
         else
         {
@@ -66,21 +58,13 @@ namespace comfoair_q
     {
         uint8_t level;
         if (state >= 1)
-        {
             level = 3;
-        }
         else if (state >= 0.5)
-        {
             level = 2;
-        }
         else if (state > 0)
-        {
             level = 1;
-        }
         else
-        {
             level = 0;
-        }
         ESP_LOGD(TAG, "send_cmd_level_float: state: %f, level: %d", state, level);
 
         set_level(level);
@@ -90,10 +74,8 @@ namespace comfoair_q
     {
         std::vector<uint8_t> command = {(uint8_t)(enable ? 0x84 : 0x85), 0x15 /* SCHEDULE */, subunit_id, property_id};
         if (enable)
-        {
             command.insert(command.end(), {0x00, 0x00, 0x00, 0x00, (uint8_t)(duration_secs), (uint8_t)(duration_secs >> 8),
-                (uint8_t)(duration_secs >> 16), (uint8_t)(duration_secs >> 24), property_value});
-        }
+                                           (uint8_t)(duration_secs >> 16), (uint8_t)(duration_secs >> 24), property_value});
         send_command(command);
     }
 
@@ -104,86 +86,69 @@ namespace comfoair_q
 
     void ComfoAirQ::send_command(const std::vector<uint8_t> &command)
     {
-        bool is_multi_message_command = command.size() > 8;
-        uint32_t can_id = get_command_next_can_id_(local_node_id_, 0x01, 0, is_multi_message_command, false, true);
+        auto is_multi_message_command = command.size() > 8;
+        auto can_id = get_command_can_id_(is_multi_message_command, get_command_next_sequence_number_());
 
-        if (!is_multi_message_command)
+        if (is_multi_message_command)
+        {
+            std::vector<uint8_t> message_buffer;
+            int message_counter = 0;
+            for (size_t offset = 0; offset < command.size(); offset += 7)
+            {
+                auto length = std::min(size_t(7), command.size() - offset);
+                auto command_pos = command.begin() + offset;
+                auto is_last_message = offset + length == command.size();
+                message_buffer.clear();
+                message_buffer.push_back(message_counter | (is_last_message ? 0x80 : 0));
+                message_buffer.insert(message_buffer.end(), command_pos, command_pos + length);
+                send_can_message_(can_id, false, message_buffer);
+
+                message_counter++;
+            }
+        }
+        else
         {
             send_can_message_(can_id, false, command);
-            return;
-        }
-
-        std::vector<uint8_t> buffer;
-        int counter = 0;
-
-        for (auto it = command.begin(); it < command.end(); it += 7)
-        {
-            bool last = (command.end() - it <= 7);
-            buffer.clear();
-            buffer.push_back(counter | (last ? 0x80 : 0));
-            buffer.insert(buffer.end(), it, std::min(it + 7, command.end()));
-            send_can_message_(can_id, false, buffer);
-            counter++;
         }
     }
 
-    uint32_t ComfoAirQ::get_command_next_can_id_(
-        uint8_t src,
-        uint8_t dst,
-        uint8_t counter,
-        bool is_multi_message_command,
-        bool error,
-        bool request)
+    uint32_t ComfoAirQ::get_command_can_id_(bool is_multi_message_command, uint8_t sequence_number)
     {
-        return get_command_can_id_(src, dst, counter, is_multi_message_command, error, request, get_command_next_sequence_number_());
-    }
-
-    uint32_t ComfoAirQ::get_command_can_id_(
-        uint8_t src,
-        uint8_t dst,
-        uint8_t counter,
-        bool is_multi,
-        bool error,
-        bool request,
-        uint8_t seq)
-    {
-        return (0x1F << 24) |
-               (seq << 17) |
-               (request ? 1 << 16 : 0) |
-               (error ? 1 << 15 : 0) |
-               (is_multi ? 1 << 14 : 0) |
-               (counter << 12) |
-               (dst << 6) |
-               src;
+        return 0x1f << 24 |
+               sequence_number << 17 |
+               1 << 16 | // is_request
+               (is_multi_message_command ? 1 : 0) << 14 |
+               0x01 << 6 | // destination node: the ComfoAir Q unit
+               this->local_node_id_;
     }
 
     uint8_t ComfoAirQ::get_command_next_sequence_number_()
     {
-        return command_sequence_number_ = (command_sequence_number_ + 1) & 0x03;
+        this->command_sequence_number_ = (this->command_sequence_number_ + 1) & 0x3;
+        return this->command_sequence_number_;
     }
 
-    void ComfoAirQ::send_can_message_(
-        uint32_t can_id,
-        bool remote_transmission_request,
-        const std::vector<uint8_t> &data)
+    void ComfoAirQ::send_can_message_(uint32_t can_id, bool remote_transmission_request, const std::vector<uint8_t> &data)
     {
-        ESP_LOGD(TAG, "Send CAN: id=0x%08lx (pdo_id=%ld), rtr=%d, size=%d, data=%s",
-                 can_id, can_id >> 14, remote_transmission_request, data.size(), format_hex_pretty(data).c_str());
+        ESP_LOGD(TAG, "Send can message: id: 0x%08lx (pdo_id: %ld), rtr: %d, size: %d, content: %s", can_id, can_id >> 14,
+                 remote_transmission_request, data.size(), format_hex_pretty(data).c_str());
 
-        if (!parent_)
+        if (parent_ == nullptr)
         {
-            ESP_LOGE(TAG, "Parent CAN bus not set.");
+            ESP_LOGE(TAG, "Parent not set, exiting send_can_message_.");
             return;
         }
 
-        CanbusSendAction<> action;
-        action.set_parent(parent_);
-        action.set_can_id(can_id);
+        // We could have also called send_data directly, but using CanbusSendAction seem to be a bit more future-proof
+        // id(parent_).send_data(can_id, true, true, {});
+
+        CanbusSendAction<> canbus_send_action;
+        canbus_send_action.set_parent(parent_);
+        canbus_send_action.set_can_id(can_id);
+        // use_extended_id has already been set globally on parent
         if (remote_transmission_request)
-        {
-            action.set_remote_transmission_request(true);
-        }
-        action.set_data_static(data.data(), data.size());
-        action.play();
+            canbus_send_action.set_remote_transmission_request(true);
+        canbus_send_action.set_data_static(data.data(), data.size());
+        canbus_send_action.play();
     }
 }

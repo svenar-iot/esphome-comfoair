@@ -4,6 +4,7 @@
 // ===================== CORE ======================
 // =================================================
 
+#define COMMAND_MAX_LENGTH 70
 #define COMMAND_PREFIX 0x07
 #define COMMAND_HEAD 0xF0
 #define COMMAND_LEN_HEAD 5
@@ -13,6 +14,9 @@
 #define COMMAND_ID_ACK 1
 #define COMMAND_IDX_DATA 4
 #define COMMAND_IDX_MSG_ID 3
+
+#define COMMAND_FRAME_TIMEOUT_MS 200 // Time to wait for a command response
+#define COMMAND_RETRY_GAP_MS 100 // Minimum time between retries of a command after a failed checksum
 
 // =================================================
 // ========== Bootloader (PC an ComfoAir) ==========

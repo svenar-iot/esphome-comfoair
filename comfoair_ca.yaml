@@ -31,7 +31,7 @@ esphome:
   name_add_mac_suffix: true
   project:
     name: "${developer}.${description}"
-    version: 1.1.8
+    version: 2.0.0
 
 external_components:
   - source:
@@ -50,7 +50,7 @@ wifi:
     ssid: ${node_name}-setup
     password: ${node_name}setup
 
-esp32_improv:
+improv_ble:
   authorizer: none
 
 captive_portal:
@@ -132,6 +132,7 @@ uart:
   baud_rate: 9600
   tx_pin: 17
   rx_pin: 16
+  rx_buffer_size: 512
 
 comfoair_ca:
   id: comfoair_climate
@@ -196,13 +197,13 @@ comfoair_ca:
   options_present:
     name: "Options present"
   fireplace_present:
-    name: "fireplace_present"
+    name: "Fireplace present"
   kitchen_hood_present:
-    name: "kitchen_hood_present"
+    name: "Kitchen hood present"
   postheating_present:
-    name: "postheating_present"
+    name: "Postheating present"
   postheating_pwm_mode_present:
-    name: "postheating_pwm_mode_present"
+    name: "Postheating PWM mode present"
   preheating_present:
     name: "Preheating present"
   bypass_factor:
@@ -319,24 +320,18 @@ button:
           auto call = id(comfoair_climate).make_call();
           call.set_fan_mode(climate::CLIMATE_FAN_HIGH);
           call.perform();
+  - platform: template
+    name: "Reset Filter"
+    on_press:
+      then:
+        - lambda: |-
+                id(comfoair_climate)->filter_reset();
 
 switch:
   - platform: factory_reset
     id: restart_with_factory_default_settings
     name: Restart with Factory Default Settings
     icon: mdi:restart-alert
-  - platform: template
-    name: "Developer Mode"
-    id: developer_mode
-    icon: "mdi:bug"
-    lambda: |-
-      return id(comfoair_climate).get_developer_mode();
-    turn_on_action:
-      - lambda: |-
-          id(comfoair_climate).set_developer_mode(true);
-    turn_off_action:
-      - lambda: |-
-          id(comfoair_climate).set_developer_mode(false);
   - platform: template
     name: "Supply Shutoff"
     id: supply_shutoff
@@ -367,6 +362,32 @@ switch:
           if (id(stored_sup_med) == 0) id(stored_sup_med) = 50;
           if (id(stored_sup_hig) == 0) id(stored_sup_hig) = 70;
           id(comfoair_climate).set_supply_levels(id(stored_sup_abs), id(stored_sup_low), id(stored_sup_med), id(stored_sup_hig));
+
+select:
+  - platform: template
+    name: "Developer Mode"
+    id: developer_mode
+    icon: "mdi:bug"
+    optimistic: false
+    options:
+      - "None"
+      - "Debug"
+      - "Verbose"
+    lambda: |-
+      switch (id(comfoair_climate).get_developer_mode()) {
+        case esphome::comfoair_ca::LogLevel::Verbose: return std::string("Verbose");
+        case esphome::comfoair_ca::LogLevel::Debug:   return std::string("Debug");
+        default:                                      return std::string("None");
+      }
+    set_action:
+      - lambda: |-
+          if (x == "Verbose") {
+            id(comfoair_climate).set_developer_mode(esphome::comfoair_ca::LogLevel::Verbose);
+          } else if (x == "Debug") {
+            id(comfoair_climate).set_developer_mode(esphome::comfoair_ca::LogLevel::Debug);
+          } else {
+            id(comfoair_climate).set_developer_mode(esphome::comfoair_ca::LogLevel::None);
+          }
 
 number:
   - platform: template

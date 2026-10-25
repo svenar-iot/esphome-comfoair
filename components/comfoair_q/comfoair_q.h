@@ -1,6 +1,8 @@
 #pragma once
 
 #include <esphome.h>
+#include "airflow_constraints.h"
+#include <cmath>
 
 using namespace esphome; // needed for ESP_LOGx to work
 using namespace esphome::canbus;
@@ -16,7 +18,6 @@ namespace comfoair_q
         VENTILATION_LEVEL_MEDIUM = 2,
         VENTILATION_LEVEL_HIGH = 3,
     };
-
     enum TemperatureProfile : uint8_t
     {
         TEMP_PROFILE_NORMAL = 0,
@@ -47,13 +48,12 @@ namespace comfoair_q
 
     class ComfoAirQ : public PollingComponent
     {
-
     public:
         void setup() override;
         void update() override;
 
         void set_parent(Canbus *parent) { parent_ = parent; }
-        void set_request_ids(const std::vector<uint16_t> request_ids) { request_ids_ = request_ids; }
+        void set_request_ids(const std::vector<uint16_t> &request_ids) { request_ids_ = request_ids; }
         void set_request_delay(uint32_t request_delay) { request_delay_ = request_delay; }
         void set_local_node_id(uint8_t local_node_id) { local_node_id_ = local_node_id; }
 
@@ -100,6 +100,17 @@ namespace comfoair_q
         void send_command_set_timer(bool enable, uint8_t subunit_id, uint8_t property_id, uint8_t property_value = 0x00,
                                     uint32_t duration_secs = 1 /* seems to be the constant for timers with pre-defined durations */);
         void send_command_set_property(uint8_t unit_id, uint8_t subunit_id, uint8_t property_id, uint8_t property_value);
+        void send_command_set_property_uint16(uint8_t unit_id, uint8_t subunit_id, uint8_t property_id, uint16_t value)
+        {
+            send_command({0x03, unit_id, subunit_id, property_id, uint8_t(value), uint8_t(value >> 8)});
+        }
+        bool set_filter_lifetime(float days)
+        {
+            if (!std::isfinite(days) || days < 0 || days > 65535 || std::floor(days) != days)
+                return false;
+            send_command_set_property_uint16(0x1c, 0x01, 0x03, uint16_t(days));
+            return true; // Valid request sent, not a device acknowledgement.
+        }
         void send_command(const std::vector<uint8_t> &command);
 
         // keep template functions in here to make sure they get implemented for all required types by being used from lambdas inside yaml
@@ -118,43 +129,26 @@ namespace comfoair_q
         }
 
         template <class T>
-        static void publish_state(T state_id, const std::vector<uint8_t> can_message, bool is_unsigned = false)
+        static void publish_state(T state_id, const std::vector<uint8_t> &can_message, bool is_unsigned = false)
         {
-            switch (can_message.size())
+            const auto size = can_message.size();
+            if (size != 1 && size != 2 && size != 4)
             {
-            case 1:
-                publish_state(state_id, *((uint8_t *)&can_message[0]));
-                break;
-            case 2:
-                if (!is_unsigned)
-                    publish_state(state_id, *((int16_t *)&can_message[0]));
-                else
-                    publish_state(state_id, *((uint16_t *)&can_message[0]));
-                break;
-            case 4:
-                if (!is_unsigned)
-                    publish_state(state_id, *((int32_t *)&can_message[0]));
-                else
-                    publish_state(state_id, *((uint32_t *)&can_message[0]));
-                break;
-            case 8:
-                if (!is_unsigned)
-                    publish_state(state_id, *((int64_t *)&can_message[0]));
-                else
-                    publish_state(state_id, *((uint64_t *)&can_message[0]));
-                break;
-            default:
-                ESP_LOGW("comfoair", "Unable to infer type from can message size: %d", can_message.size());
-                break;
+                ESP_LOGW("comfoair", "Unable to infer type from can message size: %zu", size);
+                return;
             }
-        }
-
-        template <class T>
-        static __attribute((always_inline)) inline void publish_pdo_state(uint16_t pdo_id, T state_id, uint32_t can_id,
-                                                                          const std::vector<uint8_t> can_message, bool is_unsigned = false)
-        {
-            if ((can_id & (0x3ff << 14)) == pdo_id << 14)
-                ComfoAirQ::publish_state(state_id, can_message, is_unsigned);
+            uint32_t value = 0;
+            for (size_t i = 0; i < size; i++)
+                value |= uint32_t(can_message[i]) << (8 * i);
+            if (size == 1 || is_unsigned)
+                publish_state(state_id, value);
+            else
+            {
+                int64_t signed_value = value;
+                if (value & (uint32_t(1) << (size * 8 - 1)))
+                    signed_value -= int64_t(1) << (size * 8);
+                publish_state(state_id, signed_value);
+            }
         }
 
         static __attribute((always_inline)) inline uint16_t get_pdo_id_from_can_id(uint32_t can_id)
@@ -162,27 +156,39 @@ namespace comfoair_q
             return can_id >> 14;
         }
 
-        static std::string seconds_to_human_readable(int seconds)
+        static void publish_duration_state(sensor::Sensor *raw, text_sensor::TextSensor *formatted,
+                                           const std::vector<uint8_t> &message)
         {
-            if (seconds < 0)
+            if (message.size() != 4)
+                return;
+            uint32_t seconds = 0;
+            for (size_t i = 0; i < 4; i++)
+                seconds |= uint32_t(message[i]) << (8 * i);
+            raw->publish_state(seconds);
+            formatted->publish_state(seconds_to_human_readable(seconds));
+        }
+
+        static std::string seconds_to_human_readable(int64_t seconds)
+        {
+            if (seconds < 0 || seconds == 0xffffffffLL)
                 return "n/a";
 
             std::string output;
             if (output.length() > 0 || seconds >= 86400)
             {
-                int days = seconds / 86400;
+                auto days = seconds / 86400;
                 output += to_string(days) + "d";
                 seconds -= days * 86400;
             }
             if (output.length() > 0 || seconds >= 3600)
             {
-                int hours = seconds / 3600;
+                auto hours = seconds / 3600;
                 output += to_string(hours) + "h";
                 seconds -= hours * 3600;
             }
             if (output.length() > 0 || seconds >= 60)
             {
-                int minutes = seconds / 60;
+                auto minutes = seconds / 60;
                 output += to_string(minutes) + "m";
                 seconds -= minutes * 60;
             }
@@ -199,12 +205,10 @@ namespace comfoair_q
         int request_next_pdo_pos_ = 0;
         void request_next_pdo_();
 
-        uint8_t local_node_id_ = 0x3e;
+        uint8_t local_node_id_ = 0x2a;
 
-        uint32_t get_command_next_can_id_(uint8_t src_node_id, uint8_t dst_node_id, uint8_t unknown_counter,
-                                          bool is_multi_message_command, bool response_error_occurred, bool is_request);
-        uint32_t get_command_can_id_(uint8_t src_node_id, uint8_t dst_node_id, uint8_t unknown_counter,
-                                     bool is_multi_message_command, bool response_error_occurred, bool is_request, uint8_t sequence_number);
+        // Builds the CAN id of a command frame sent from this node to the ComfoAir Q unit (node 0x01).
+        uint32_t get_command_can_id_(bool is_multi_message_command, uint8_t sequence_number);
         uint8_t get_command_next_sequence_number_();
         uint8_t command_sequence_number_ = 0;
 
